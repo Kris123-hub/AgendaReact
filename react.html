@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agenda de Contactos - React</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fff5f5;
+      color: #4b0000;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #ffe3e3;
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    }
+
+    h1 {
+      text-align: center;
+      color: #c92a2a;
+    }
+
+    form {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    input[type="text"] {
+      padding: 0.75rem;
+      border: 1px solid #faa2c1;
+      border-radius: 10px;
+      font-size: 1rem;
+      background-color: #fff0f6;
+    }
+
+    button {
+      background-color: #ff8787;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 10px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background-color: #fa5252;
+    }
+
+    .contacto {
+      border-bottom: 1px solid #fcc2d7;
+      padding: 0.75rem 0;
+    }
+
+    .contacto:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React + ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <!-- Babel (para usar JSX en el navegador) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Nuestro código React con JSX -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const ListaContactos = ({ contactos }) => (
+      <div id="lista-contactos">
+        {contactos.map((c, i) => (
+          <div key={i} className="contacto">
+            {`${c.apellido}, ${c.nombre} - ${c.telefono}`}
+          </div>
+        ))}
+      </div>
+    );
+
+    const FormularioContacto = ({ onAgregar }) => {
+      const [formData, setFormData] = useState({
+        nombre: '',
+        apellido: '',
+        telefono: ''
+      });
+
+      const manejarCambio = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+      };
+
+      const manejarEnvio = (e) => {
+        e.preventDefault();
+        onAgregar(formData);
+        setFormData({ nombre: '', apellido: '', telefono: '' });
+      };
+
+      return (
+        <form id="formulario" onSubmit={manejarEnvio}>
+          <input
+            type="text"
+            name="apellido"
+            placeholder="Apellido"
+            value={formData.apellido}
+            onChange={manejarCambio}
+            required
+          />
+          <input
+            type="text"
+            name="nombre"
+            placeholder="Nombre"
+            value={formData.nombre}
+            onChange={manejarCambio}
+            required
+          />
+          <input
+            type="text"
+            name="telefono"
+            placeholder="Teléfono"
+            value={formData.telefono}
+            onChange={manejarCambio}
+            required
+          />
+          <button type="submit">Agregar Contacto</button>
+        </form>
+      );
+    };
+
+    const Agenda = () => {
+      const [contactos, setContactos] = useState([]);
+      const url = 'http://www.raydelto.org/agenda.php';
+
+      const obtenerContactos = () => {
+        fetch(url)
+          .then((res) => res.json())
+          .then((data) => setContactos(data));
+      };
+
+      const agregarContacto = (nuevoContacto) => {
+        fetch(url, {
+          method: 'POST',
+          body: JSON.stringify(nuevoContacto)
+        }).then(() => {
+          setTimeout(obtenerContactos, 1000);
+        });
+      };
+
+      useEffect(() => {
+        obtenerContactos();
+      }, []);
+
+      return (
+        <div className="container">
+          <h1>Agenda de Contactos</h1>
+          <FormularioContacto onAgregar={agregarContacto} />
+          <ListaContactos contactos={contactos} />
+        </div>
+      );
+    };
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Agenda />);
+  </script>
+</body>
+</html>
